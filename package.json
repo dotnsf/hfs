@@ -9,7 +9,7 @@
         "basic-auth-connect": "1.0.x",
         "body-parser": "1.17.x",
         "crypto": "^1.0.1",
-        "ejs": "2.3.x",
+        "ejs": "3.0.x",
         "express": "4.17.x",
         "multer": "1.1.x"
     },

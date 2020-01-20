@@ -1,0 +1,92 @@
+swagger: '2.0'
+info:
+  description: HFS API ドキュメント
+  version: 0.0.1
+  title: HFS Platform REST APIs
+host: localhost:3000
+basePath: /api
+tags:
+  - name: hfs
+    description: HFS APIs
+schemes:
+  - http
+  - https
+paths:
+  /file/{id}:
+    get:
+      tags:
+        - hfs
+      summary: 指定した１つのデータを取り出す
+      description: \{id\} で指定した id のデータを一件取りだす
+      parameters:
+        - name: id
+          type: string
+          in: path
+          description: id
+          required: true
+        - name: hash
+          type: string
+          in: query
+          description: 指定した id のハッシュ値だけを取り出す
+        - name: download
+          type: string
+          in: query
+          description: 指定した id のデータをダウンロードする
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+    delete:
+      tags:
+        - hfs
+      summary: 指定した１つのデータを削除する
+      description: \{id\} で指定した id のデータを一件削除する
+      parameters:
+        - name: id
+          type: string
+          in: path
+          description: id
+          required: true
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+  /file_ids:
+    get:
+      tags:
+        - hfs
+      summary: データを取り出す
+      description: データを全件取りだす
+      parameters:
+        - name: limit
+          type: number
+          in: query
+          description: 取得するデータ数
+        - name: offset
+          type: number
+          in: query
+          description: 取得するデータのオフセット
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+  /file:
+    post:
+      tags:
+        - hfs
+      summary: データを作成する
+      description: データを作成する
+      parameters:
+        - name: file
+          in: formData
+          type: file
+          description: アップロードするファイル
+          required: true
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー

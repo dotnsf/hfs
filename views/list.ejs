@@ -15,7 +15,7 @@ $(function(){
       result.ids.forEach( function( id ){
         var tr = '<tr>'
           + '<td>' + shortenStr( id ) + '</td>'
-          + '<td><img src="/api/file/' + id + '" width="200"/></td>'
+          + '<td><img src="/api/file/' + id + '?binary=1" width="200"/></td>'
           + '<td>'
           + '<input type="button" class="btn btn-primary btn-xs" value="DOWNLOAD" onClick="downloadFile(\'' + id + '\');"/>'
           + '<input type="button" class="btn btn-danger btn-xs" value="DEL" onClick="delFile(\'' + id + '\');"/>'

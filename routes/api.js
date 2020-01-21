@@ -163,7 +163,7 @@ router.get( '/file_ids', function( req, res ){
 router.get( '/file/:id', function( req, res ){
   var id = req.params.id;
   var _download = req.query.download;
-  var _hash = req.query.hash;
+  var _binary = req.query.binary;
   if( id ){
     db.get( id, { include_docs: true }, function( err, file ){
       if( err ){
@@ -172,27 +172,17 @@ router.get( '/file/:id', function( req, res ){
         res.write( JSON.stringify( { status: false, error: err }, null, 2 ) );
         res.end();
       }else{
-        //console.log( file );
-        var filename = file.originalname ? file.originalname : id;
-        //var ts = file.timestamp;
-
-        db.attachment.get( id, "file", function( err, body ){
-          if( err ){
-            res.contentType( 'application/json; charset=utf-8' );
-            res.status( 400 );
-            res.write( JSON.stringify( { status: false, error: err }, null, 2 ) );
-            res.end();
-          }else{
-            if( _hash ){
-              var hash = crypto.createHash( 'sha512' );
-              hash.update( JSON.stringify( body ) );
-              var _id = hash.digest( 'hex' );
-
+        if( _download || _binary ){
+          db.attachment.get( id, "file", function( err, body ){
+            if( err ){
               res.contentType( 'application/json; charset=utf-8' );
-              res.write( JSON.stringify( { status: true, hash: _id }, null, 2 ) );
+              res.status( 400 );
+              res.write( JSON.stringify( { status: false, error: err }, null, 2 ) );
               res.end();
             }else{
               if( _download ){
+                var filename = file.originalname ? file.originalname : id;
+                //var ts = file.timestamp;
                 res.set({
                   'Content-Disposition': 'attachment; filename=' + filename,
                   'Content-Type': 'application/force-download'
@@ -200,8 +190,14 @@ router.get( '/file/:id', function( req, res ){
               }
               res.end( body, 'binary' );
             }
-          }
-        });
+          });
+        }else{
+          delete file['_rev'];
+          delete file['_attachments'];
+          res.contentType( 'application/json; charset=utf-8' );
+          res.write( JSON.stringify( { status: true, file: file }, null, 2 ) );
+          res.end();
+        }
       }
     });
   }else{

@@ -17,17 +17,17 @@ paths:
       tags:
         - hfs
       summary: 指定した１つのデータを取り出す
-      description: \{id\} で指定した id のデータを一件取りだす
+      description: \{id\} で指定した id のメタデータを一件取りだす
       parameters:
         - name: id
           type: string
           in: path
           description: id
           required: true
-        - name: hash
+        - name: binary
           type: string
           in: query
-          description: 指定した id のハッシュ値だけを取り出す
+          description: 指定した id のバイナリデータを Content-Type ごと取り出す
         - name: download
           type: string
           in: query

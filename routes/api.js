@@ -166,36 +166,43 @@ router.get( '/file/:id', function( req, res ){
   var _hash = req.query.hash;
   if( id ){
     db.get( id, { include_docs: true }, function( err, file ){
-      //console.log( file );
-      var filename = file.originalname ? file.originalname : id;
-      //var ts = file.timestamp;
+      if( err ){
+        res.contentType( 'application/json; charset=utf-8' );
+        res.status( 400 );
+        res.write( JSON.stringify( { status: false, error: err }, null, 2 ) );
+        res.end();
+      }else{
+        //console.log( file );
+        var filename = file.originalname ? file.originalname : id;
+        //var ts = file.timestamp;
 
-      db.attachment.get( id, "file", function( err, body ){
-        if( err ){
-          res.contentType( 'application/json; charset=utf-8' );
-          res.status( 400 );
-          res.write( JSON.stringify( { status: false, error: err }, null, 2 ) );
-          res.end();
-        }else{
-          if( _hash ){
-            var hash = crypto.createHash( 'sha512' );
-            hash.update( JSON.stringify( body ) );
-            var _id = hash.digest( 'hex' );
-
+        db.attachment.get( id, "file", function( err, body ){
+          if( err ){
             res.contentType( 'application/json; charset=utf-8' );
-            res.write( JSON.stringify( { status: true, hash: _id }, null, 2 ) );
+            res.status( 400 );
+            res.write( JSON.stringify( { status: false, error: err }, null, 2 ) );
             res.end();
           }else{
-            if( _download ){
-              res.set({
-                'Content-Disposition': 'attachment; filename=' + filename,
-                'Content-Type': 'application/force-download'
-              });
+            if( _hash ){
+              var hash = crypto.createHash( 'sha512' );
+              hash.update( JSON.stringify( body ) );
+              var _id = hash.digest( 'hex' );
+
+              res.contentType( 'application/json; charset=utf-8' );
+              res.write( JSON.stringify( { status: true, hash: _id }, null, 2 ) );
+              res.end();
+            }else{
+              if( _download ){
+                res.set({
+                  'Content-Disposition': 'attachment; filename=' + filename,
+                  'Content-Type': 'application/force-download'
+                });
+              }
+              res.end( body, 'binary' );
             }
-            res.end( body, 'binary' );
           }
-        }
-      });
+        });
+      }
     });
   }else{
     res.contentType( 'application/json; charset=utf-8' );

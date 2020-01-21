@@ -78,10 +78,31 @@ paths:
       tags:
         - hfs
       summary: データを作成する
-      description: データを作成する
+      description: データを作成する（データのハッシュ値が _id 値として記録される）
+      consumes:
+        - multipart/form-data
       parameters:
-        - name: file
-          in: formData
+        - in: formData
+          name: file
+          type: file
+          description: アップロードするファイル
+          required: true
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+  /validate:
+    post:
+      tags:
+        - hfs
+      summary: データを確認する
+      description: データを確認する
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: file
           type: file
           description: アップロードするファイル
           required: true

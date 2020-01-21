@@ -47,13 +47,20 @@ router.post( '/file', function( req, res ){
   //var filesize = req.file.size;
   var ext = filetype.split( "/" )[1];
   //var filename = req.file.filename;
+  var originalname = req.file.originalname;
+  var ts = ( new Date() ).getTime();
 
   if( filepath ){
     var bin = fs.readFileSync( filepath );
     var bin64 = new Buffer( bin ).toString( 'base64' );
 
+    var hash = crypto.createHash( 'sha512' );
+    hash.update( JSON.stringify( bin ) );
+    var _id = hash.digest( 'hex' );
+
     var params = {
-      //_id: path,
+      originalname: originalname,
+      timestamp: ts,
       _attachments: {
         file: {
           content_type: filetype,
@@ -62,7 +69,7 @@ router.post( '/file', function( req, res ){
       }
     };
 
-    db.insert( params, /*path,*/ function( err, body, header ){
+    db.insert( params, _id, function( err, body, header ){
       fs.unlink( filepath, function( err ){} );
       if( err ){
         res.status( 400 );
@@ -70,6 +77,41 @@ router.post( '/file', function( req, res ){
         res.end();
       }else{
         res.write( JSON.stringify( { status: true, id: body.id }, null, 2 ) );
+        res.end();
+      }
+    });
+  }else{
+    res.status( 400 );
+    res.write( JSON.stringify( { status: false, error: 'No file attached.' }, null, 2 ) );
+    res.end();
+  }
+});
+
+router.post( '/validate', function( req, res ){
+  res.contentType( 'application/json; charset=utf-8' );
+
+  var filepath = req.file.path;
+  var filetype = req.file.mimetype;
+  //var filesize = req.file.size;
+  var ext = filetype.split( "/" )[1];
+  //var filename = req.file.filename;
+
+  if( filepath ){
+    var bin = fs.readFileSync( filepath );
+
+    var hash = crypto.createHash( 'sha512' );
+    hash.update( JSON.stringify( bin ) );
+    var id = hash.digest( 'hex' );
+
+    fs.unlink( filepath, function( err ){} );
+
+    db.get( id, "file", function( err, doc ){
+      if( err ){
+        res.status( 400 );
+        res.write( JSON.stringify( { status: false, hash: id }, null, 2 ) );
+        res.end();
+      }else{
+        res.write( JSON.stringify( { status: true, hash: id }, null, 2 ) );
         res.end();
       }
     });
@@ -123,31 +165,37 @@ router.get( '/file/:id', function( req, res ){
   var _download = req.query.download;
   var _hash = req.query.hash;
   if( id ){
-    db.attachment.get( id, "file", function( err, body ){
-      if( err ){
-        res.contentType( 'application/json; charset=utf-8' );
-        res.status( 400 );
-        res.write( JSON.stringify( { status: false, error: err }, null, 2 ) );
-        res.end();
-      }else{
-        if( _hash ){
-          var hash = crypto.createHash( 'sha512' );
-          hash.update( JSON.stringify( body ) );
-          var hashvalue = hash.digest( 'hex' );
+    db.get( id, { include_docs: true }, function( err, file ){
+      //console.log( file );
+      var filename = file.originalname ? file.originalname : id;
+      //var ts = file.timestamp;
 
+      db.attachment.get( id, "file", function( err, body ){
+        if( err ){
           res.contentType( 'application/json; charset=utf-8' );
-          res.write( JSON.stringify( { status: true, hash: hashvalue }, null, 2 ) );
+          res.status( 400 );
+          res.write( JSON.stringify( { status: false, error: err }, null, 2 ) );
           res.end();
         }else{
-          if( _download ){
-            res.set({
-              'Content-Disposition': 'attachment; filename=' + id,
-              'Content-Type': 'application/force-download'
-            });
+          if( _hash ){
+            var hash = crypto.createHash( 'sha512' );
+            hash.update( JSON.stringify( body ) );
+            var _id = hash.digest( 'hex' );
+
+            res.contentType( 'application/json; charset=utf-8' );
+            res.write( JSON.stringify( { status: true, hash: _id }, null, 2 ) );
+            res.end();
+          }else{
+            if( _download ){
+              res.set({
+                'Content-Disposition': 'attachment; filename=' + filename,
+                'Content-Type': 'application/force-download'
+              });
+            }
+            res.end( body, 'binary' );
           }
-          res.end( body, 'binary' );
         }
-      }
+      });
     });
   }else{
     res.contentType( 'application/json; charset=utf-8' );

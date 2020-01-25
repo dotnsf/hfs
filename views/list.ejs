@@ -18,6 +18,7 @@ $(function(){
           + '<td><img src="/api/file/' + id + '?binary=1" width="200"/></td>'
           + '<td>'
           + '<input type="button" class="btn btn-primary btn-xs" value="DOWNLOAD" onClick="downloadFile(\'' + id + '\');"/>'
+          + '<input type="button" class="btn btn-secondary btn-xs" value="VALIDATE" onClick="validateFile(\'' + id + '\');"/>'
           + '<input type="button" class="btn btn-danger btn-xs" value="DEL" onClick="delFile(\'' + id + '\');"/>'
           + '</td>'
           + '</tr>';
@@ -28,7 +29,7 @@ $(function(){
         + '<td><form name="frm" id="frm" method="POST" action="/api/file" enctype="multipart/form-data"><input class="form-control" type="file" id="file" name="file"/></form></td>'
         + '<td>'
         + '<input type="button" class="btn btn-success btn-xs" value="ADD" onClick="addFile();"/>'
-        + '<input type="button" class="btn btn-warning btn-xs" value="VALIDATE" onClick="validateFile();"/>'
+        + '<input type="button" class="btn btn-warning btn-xs" value="EXIST" onClick="existFile();"/>'
         + '</td>'
         + '</tr>';
       $('#table-body').append( tr );
@@ -67,13 +68,31 @@ function addFile(){
   return false;
 }
 
-function validateFile(){
+function validateFile( id ){
+  $.ajax({
+    type: "POST",
+    url: '/api/validate/' + id,
+    success: function( result ){
+      console.log( result );
+      if( result && result.status ){
+        alert( 'validated.' );
+      }else{
+        alert( 'validation failed.' );
+      }
+    },
+    error: function( e0, e1, e2 ){
+      console.log( e1 + " : " + e2 );
+    }
+  });
+}
+
+function existFile(){
   var fd = new FormData();
   if( $("input[name='file']").val() != '' ){
     fd.append( "file", $("input[name='file']").prop("files")[0] );
     $.ajax({
       type: "POST",
-      url: '/api/validate',
+      url: '/api/exist',
       dataType: "text",
       data: fd,
       processData: false,

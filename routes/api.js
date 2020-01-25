@@ -87,7 +87,36 @@ router.post( '/file', function( req, res ){
   }
 });
 
-router.post( '/validate', function( req, res ){
+router.post( '/validate/:id', function( req, res ){
+  res.contentType( 'application/json; charset=utf-8' );
+  var id = req.params.id;
+  if( id ){
+    db.attachment.get( id, "file", function( err, body ){
+      if( err ){
+        res.status( 400 );
+        res.write( JSON.stringify( { status: false, error: err }, null, 2 ) );
+        res.end();
+      }else{
+        var hash = crypto.createHash( 'sha512' );
+        hash.update( JSON.stringify( body ) );
+        var value = hash.digest( 'hex' );
+        if( id == value ){
+          res.write( JSON.stringify( { status: true, hashvalue: value }, null, 2 ) );
+          res.end();
+        }else{
+          res.write( JSON.stringify( { status: false, hashvalue: value }, null, 2 ) );
+          res.end();
+        }
+      }
+    });
+  }else{
+    res.status( 400 );
+    res.write( JSON.stringify( { status: false, error: 'Parameter id required.' }, null, 2 ) );
+    res.end();
+  }
+});
+
+router.post( '/exist', function( req, res ){
   res.contentType( 'application/json; charset=utf-8' );
 
   var filepath = req.file.path;

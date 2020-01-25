@@ -57,8 +57,8 @@ paths:
     get:
       tags:
         - hfs
-      summary: データを取り出す
-      description: データを全件取りだす
+      summary: データを全件取り出す
+      description: 全データの id を取りだす
       parameters:
         - name: limit
           type: number
@@ -92,12 +92,12 @@ paths:
           description: 成功
         '400':
           description: エラー
-  /validate:
+  /exist:
     post:
       tags:
         - hfs
-      summary: データを確認する
-      description: データを確認する
+      summary: アップロードするデータが存在しているかを確認する
+      description: アップロードするデータが存在しているかを確認する
       consumes:
         - multipart/form-data
       parameters:
@@ -105,6 +105,23 @@ paths:
           name: file
           type: file
           description: アップロードするファイル
+          required: true
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+  /validate/{id}:
+    post:
+      tags:
+        - hfs
+      summary: 格納データが改ざんされていないことを確認
+      description: ハッシュ値と比較して格納データが改ざんされていないことを確認
+      parameters:
+        - name: id
+          type: string
+          in: path
+          description: id
           required: true
       responses:
         '200':
